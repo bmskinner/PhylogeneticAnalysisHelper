@@ -1,0 +1,37 @@
+Package: PhylogeneticAnalysisHelper
+Type: Package
+Title: Helper functions for running phylogenetics packages through R
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Ben", "Skinner",
+      email = "b.skinner@essex.ac.uk",
+      role = c("aut", "cre")
+    )
+  )
+Description: Provides wrapper functions to interact with externally installed
+    binaries for phylogenetics analysis, such as MACSE, IQTREE, and for parsing
+    their outputs.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+    Biostrings,
+    brio,
+    ape,
+    dplyr,
+    filesstrings,
+    fs,
+    ggtree,
+    ggplot2,
+    jsonlite,
+    metagMisc,
+    phytools,
+    seqinr,
+    stringr,
+    tidyr,
+    xlsx,
+    stats,
+    utils,
+    rlang
+RoxygenNote: 7.3.2
