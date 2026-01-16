@@ -127,6 +127,50 @@ reroot.tree <- function(tree, node.labels, position = 0.01) {
   return(phytools::reroot(tree, root.node, position = position))
 }
 
+#' Group a tree by a column from a data.frame.
+#'
+#' The metadata data.frame provided should have a 'value' column with the tip labels
+#' in the tree. The contents of the column with the name in 'grouping.column' will
+#' be used to create a tree group. The tree group will have the same name as the
+#' grouping column.
+#'
+#' @param tree the tree to group
+#' @param metadata a data.frame with columns 'value' and grouping.column
+#' @param grouping.column the name of the column in metadata with the grouping variables
+#'
+#' @returns the tree with the added grouping
+#' @export
+add.tree.grouping <- function(tree, metadata, tip.label.column = "tip.label", grouping.column) {
+  clade.data <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, tip.label.column] == x, grouping.column]))
+  clade.groups <- split(tree$tip.label, clade.data)
+  tidytree::groupOTU(tree, clade.groups, group_name = grouping.column)
+  tree
+}
+
+
+#' Change the tip labels of a tree to a column from a data.frame.
+#'
+#' The metadata data.frame provided should have a column with the new tip labels
+#' in the tree. The contents of the column with the name in 'grouping.column' will
+#' be used to create a tree group. The tree group will have the same name as the
+#' grouping column.
+#'
+#' @param tree the tree to group
+#' @param metadata a data.frame with columns 'value' and grouping.column
+#' @param original.tip.label.column the name of the column in metadata with the original tip labels
+#' @param new.tip.label.column the name of the column in metadata with the new tip labels
+#'
+#' @returns the tree with the added grouping
+#' @export
+update.tip.labels <- function(tree, metadata,
+                              original.tip.label.column = "value",
+                              new.tip.label.column = "tip.label") {
+  attr(tree, "old.tip.labels") <- tree$tip.label
+  new.tip.labels <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, original.tip.label.column] == x, new.tip.label.column]))
+  tree$tip.labels <- new.tip.labels
+  tree
+}
+
 
 #' Convert a Biostrings MSA to a character list
 #'
