@@ -4,7 +4,7 @@
 \alias{subset.sequence}
 \title{Extract sequence from a Biostrings alignment.}
 \usage{
-\method{subset}{sequence}(aln, sequence.name, start, end)
+subset.sequence(aln, sequence.name, start, end)
 }
 \arguments{
 \item{aln}{msa in Biostrings format}

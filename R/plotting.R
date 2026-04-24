@@ -58,27 +58,29 @@ save.double.width <- function(filename, plot = ggplot2::last_plot(), height = 17
   save.plot(filename, plot, width = 170, height)
 }
 
-#' Plot a tree as read by ggtree or ape
+#' Plot a tree as read by ggtree or ape. The tree may have bootstrap values in
+#' the node labels
 #'
-#' @param tree.data the tree
+#' @param tree the tree
 #' @param tiplab.font.size the size of tip text in ggtree
 #' @param ... other parameters to geom_tiplab
 #'
-#' @export
+#' @export plot.tree
+#' @usage plot.tree(tree, tiplab.font.size = 2, ...)
 #' @importFrom rlang .data
 #'
-plot.tree <- function(tree.data, tiplab.font.size = 2, ...) {
+plot.tree <- function(tree, tiplab.font.size = 2, ...) {
   # Remove underscores for pretty printing
-  tree.data$tip.label <- stringr::str_replace_all(tree.data$tip.label, "_", " ")
+  tree$tip.label <- stringr::str_replace_all(tree$tip.label, "_", " ")
 
-  if (is.null(tree.data$node.label)) {
+  if (is.null(tree$node.label)) {
     stop("Cannot display bootstrap values, no node labels in tree")
   }
 
   # Get the complete node labels
   # Separate out bootstrap info
   # Numbers in parentheses are SH-aLRT support (%) / ultrafast bootstrap support (%)
-  node.label.values <- data.frame("label" = tree.data$node.label) |>
+  node.label.values <- data.frame("label" = tree$node.label) |>
     tidyr::separate_wider_delim(.data$label,
       delim = "/", names = c("name", "SHaLRT", "UFBoot"),
       too_few = "align_end", too_many = "merge"
@@ -93,28 +95,33 @@ plot.tree <- function(tree.data, tiplab.font.size = 2, ...) {
         .default = "white"
       )
     )
-  ggtree::ggtree(tree.data) +
+  ggtree::ggtree(tree) +
     ggtree::geom_tree() +
+    # Draw tips. Pass through extra aesthetic arguments in ...
     ggtree::geom_tiplab(size = tiplab.font.size, ggplot2::aes_string(...)) +
-    # geom_nodelab(size=2, nudge_x = -0.003, nudge_y = 0.5, hjust=1,  node = "internal")+
-    ggtree::geom_nodepoint(size = 1.25, col = "black") +
-    ggtree::geom_nodepoint(size = 0.65, col = node.label.values$colour) +
+    # Draw coloured circles over each node with bootstrap support
+    ggtree::geom_nodepoint(size = 1.25, col = "black") + # big black circle (will make a black outline)
+    ggtree::geom_nodepoint(size = 0.65, col = node.label.values$colour) + # small coloured circle on top
+    # Add scale bar
     ggtree::geom_treescale(fontsize = 1.8, y = -1, width = 0.05) +
-    ggplot2::coord_cartesian(
-      clip = "off",
-      ylim = c(-2, length(tree.data$tip.label) + 1)
-    ) +
+
+    # Optional - we can set the y axis to exactly size needed if space is tight
+    # ggplot2::coord_cartesian(
+    #   clip = "off",
+    #   ylim = c(-2, length(tree.data$tip.label) + 1)
+    # ) +
     ggtree::theme_tree() +
     ggplot2::theme(legend.position = "none")
 }
 
 
-#' Given an alignment, calculate KaKs and return in tidy format
+#' Given a nucleitide alignment file, calculate the KaKs and return in tidy format
 #'
 #' @param nt.aln.file the alignment file
 #'
 #' @returns the KaKs ratio in long format
-#' @export
+#' @usage calc.kaks(nt.aln.file)
+#' @export calc.kaks
 #'
 calc.kaks <- function(nt.aln.file) {
   seqin.aln <- seqinr::read.alignment(nt.aln.file, format = "fasta")
@@ -134,7 +141,10 @@ calc.kaks <- function(nt.aln.file) {
 #' @param species.order a vector with the plotting order for species in the file
 #' @param kaks.limits min and max for the plot KaKs scale
 #'
-#' @export
+#' @usage plot.kaks(nt.aln.file,
+#'  species.order = NA,
+#'  kaks.limits = c(0, 1))
+#' @export plot.kaks
 #' @importFrom rlang .data
 #'
 plot.kaks <- function(nt.aln.file, species.order = NA, kaks.limits = c(0, 1)) {

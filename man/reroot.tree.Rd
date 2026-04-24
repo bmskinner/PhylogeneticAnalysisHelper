@@ -4,18 +4,29 @@
 \alias{reroot.tree}
 \title{Reroot the given tree to the given tip labels}
 \usage{
-reroot.tree(tree, node.labels, position = 0.01)
+reroot.tree(tree, tip.labels, position = 0.01)
 }
 \arguments{
 \item{tree}{the tree to reroot (e.g. ape)}
 
-\item{node.labels}{vector of tips to root on}
+\item{tip.labels}{vector of tip labels to root on}
 
-\item{position}{the position to place the root on the selected branch}
+\item{position}{the position to place the root on the selected branch, in the
+range 0-1}
 }
 \value{
 the rerooted tree
 }
 \description{
-If the tip labels contains more than one node, their MRCA will be used as the root.
+If the tip labels contains more than one element, the most recent common
+ancestor of the tips (MRCA) will be used as the root node.
+}
+\examples{
+tree <- ape::read.tree(text = "(((a:1, b:1):1, (c:1, d:1):2):1, e:3);")
+plot(tree)
+rerooted <- reroot.tree(tree, c("a", "b"), 0.1)
+plot(rerooted)
+rerooted <- reroot.tree(tree, c("a", "b"), 0.9)
+plot(rerooted)
+
 }

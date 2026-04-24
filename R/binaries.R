@@ -9,6 +9,7 @@
 #'
 #' @examples
 #' is.on.PATH("macse")
+#' @export is.on.PATH
 is.on.PATH <- function(binary) {
   return(Sys.which(binary) != "")
 }
@@ -21,6 +22,7 @@ is.on.PATH <- function(binary) {
 #'
 #' @examples
 #' check.binary.exists("macse")
+#' @export check.binary.exists
 check.binary.exists <- function(binary) {
   if (!is.on.PATH(binary)) stop(paste("Cannot find", binary, "on PATH"))
 }

@@ -99,75 +99,117 @@ printMultipleAlignment <- function(alignment, names = NULL, names.length = NA, c
 #' @param start,end coordinates in the gapped alignment
 #'
 #' @returns the sequence from the alignment
-#' @export
+#' @usage subset.sequence(aln, sequence.name, start, end)
+#' @export subset.sequence
 subset.sequence <- function(aln, sequence.name, start, end) {
   as.character(aln@unmasked[[sequence.name]][start:end])
 }
 
 #' Reroot the given tree to the given tip labels
 #'
-#'  If the tip labels contains more than one node, their MRCA will be used as the root.
+#' If the tip labels contains more than one element, the most recent common
+#' ancestor of the tips (MRCA) will be used as the root node.
 #'
 #' @param tree the tree to reroot (e.g. ape)
-#' @param node.labels  vector of tips to root on
-#' @param position the position to place the root on the selected branch
+#' @param tip.labels  vector of tip labels to root on
+#' @param position the position to place the root on the selected branch, in the
+#'   range 0-1
 #'
 #' @returns the rerooted tree
+#' @examples
+#' tree <- ape::read.tree(text = "(((a:1, b:1):1, (c:1, d:1):2):1, e:3);")
+#' plot(tree)
+#' rerooted <- reroot.tree(tree, c("a", "b"), 0.1)
+#' plot(rerooted)
+#' rerooted <- reroot.tree(tree, c("a", "b"), 0.9)
+#' plot(rerooted)
+#'
 #' @export
 #'
-reroot.tree <- function(tree, node.labels, position = 0.01) {
-  if (!all(node.labels %in% tree$tip.label)) {
-    cat("Not all nodes (", node.labels, ") are in the tree, cannot reroot, not changing tree\n")
+reroot.tree <- function(tree, tip.labels, position = 0.01) {
+  if (!all(tip.labels %in% tree$tip.label)) {
+    cat("Not all tip labels (", tip.labels, ") are in the tree, cannot reroot, not changing tree\n")
     return(tree)
   }
-  if (length(node.labels) == 1) {
-    return(phytools::reroot(tree, which(tree$tip.label == node.labels), position = position))
+  if (length(tip.labels) == 1) {
+    return(phytools::reroot(tree, which(tree$tip.label == tip.labels), position = position))
   }
-  root.node <- ape::getMRCA(tree, node.labels)
+  root.node <- ape::getMRCA(tree, tip.labels)
   return(phytools::reroot(tree, root.node, position = position))
 }
 
 #' Group a tree by a column from a data.frame.
 #'
-#' The metadata data.frame provided should have a 'value' column with the tip labels
-#' in the tree. The contents of the column with the name in 'grouping.column' will
-#' be used to create a tree group. The tree group will have the same name as the
-#' grouping column.
+#' The metadata data.frame provided should have a column with the tip labels in
+#' the tree. The tip labels will be grouped by the values in grouping.column.
+#' The tree group will have the same name as the grouping column.
 #'
 #' @param tree the tree to group
-#' @param metadata a data.frame with columns 'value' and grouping.column
-#' @param grouping.column the name of the column in metadata with the grouping variables
+#' @param metadata a data.frame with columns for tip labels and group
+#' @param tip.label.column the name of the column in `metadata` with the tip
+#'   labels
+#' @param grouping.column the name of the column in `metadata` with the grouping
+#'   variables
 #'
 #' @returns the tree with the added grouping
+#' @examples
+#' tree <- ape::read.tree(text = "(((a:1, b:1):1, (c:1, d:1):2):1, e:3);")
+#' metadata <- data.frame(
+#'   tip.label = tree$tip.label,
+#'   Group = c("Group 1", "Group 1", "Group 2", "Group 2", "Group 3")
+#' )
+#' tree <- add.tree.grouping(tree, metadata,
+#'   tip.label.column = "tip.label", grouping.column = "Group"
+#' )
+#' ggtree::ggtree(tree) +
+#'   ggtree::geom_tree() +
+#'   ggtree::geom_tiplab(ggtree::aes(col = Group))
+#'
 #' @export
 add.tree.grouping <- function(tree, metadata, tip.label.column = "tip.label", grouping.column) {
   clade.data <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, tip.label.column] == x, grouping.column]))
   clade.groups <- split(tree$tip.label, clade.data)
-  tidytree::groupOTU(tree, clade.groups, group_name = grouping.column)
+  tree <- tidytree::groupOTU(tree, clade.groups, group_name = grouping.column)
   tree
 }
 
 
 #' Change the tip labels of a tree to a column from a data.frame.
 #'
-#' The metadata data.frame provided should have a column with the new tip labels
-#' in the tree. The contents of the column with the name in 'grouping.column' will
-#' be used to create a tree group. The tree group will have the same name as the
-#' grouping column.
+#' The metadata data.frame provided should have columns with the current tip
+#' labels and the new tip labels in the tree. The tip labels will be updated,
+#' and the original labels added as a tree attribute
 #'
-#' @param tree the tree to group
-#' @param metadata a data.frame with columns 'value' and grouping.column
-#' @param original.tip.label.column the name of the column in metadata with the original tip labels
-#' @param new.tip.label.column the name of the column in metadata with the new tip labels
+#' @param tree the tree to update
+#' @param metadata a data.frame with columns for current and new tip labels
+#' @param current.tip.label.column the name of the column in `metadata` with the
+#'   current tip labels
+#' @param new.tip.label.column the name of the column in `metadata` with the new
+#'   tip labels
 #'
-#' @returns the tree with the added grouping
-#' @export
+#' @returns the tree with the tip labels updated to the new values
+#' @examples
+#' tree <- ape::read.tree(text = "(((a:1, b:1):1, (c:1, d:1):2):1, e:3);")
+#' metadata <- data.frame(
+#'   CurrentLabel = tree$tip.label,
+#'   NewLabel = c("1", "2", "3", "4", "5")
+#' )
+#' tree <- update.tip.labels(tree, metadata,
+#'   current.tip.label.column = "CurrentLabel",
+#'   new.tip.label.column = "NewLabel"
+#' )
+#' plot(tree)
+#' @usage update.tip.labels(tree,
+#'   metadata,
+#'   current.tip.label.column = "current.tip.label",
+#'   new.tip.label.column = "new.tip.label")
+#' @export update.tip.labels
 update.tip.labels <- function(tree, metadata,
-                              original.tip.label.column = "value",
-                              new.tip.label.column = "tip.label") {
-  attr(tree, "old.tip.labels") <- tree$tip.label
-  new.tip.labels <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, original.tip.label.column] == x, new.tip.label.column]))
-  tree$tip.labels <- new.tip.labels
+                              current.tip.label.column = "current.tip.label",
+                              new.tip.label.column = "new.tip.label") {
+  attr(tree, "old.tip.label") <- tree$tip.label
+  new.tip.labels <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, current.tip.label.column] == x, new.tip.label.column]))
+  tree$tip.label <- new.tip.labels
   tree
 }
 
