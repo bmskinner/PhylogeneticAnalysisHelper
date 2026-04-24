@@ -77,41 +77,76 @@ plot.tree <- function(tree, tiplab.font.size = 2, ...) {
     stop("Cannot display bootstrap values, no node labels in tree")
   }
 
-  # Get the complete node labels
-  # Separate out bootstrap info
-  # Numbers in parentheses are SH-aLRT support (%) / ultrafast bootstrap support (%)
-  node.label.values <- data.frame("label" = tree$node.label) |>
-    tidyr::separate_wider_delim(.data$label,
-      delim = "/", names = c("name", "SHaLRT", "UFBoot"),
-      too_few = "align_end", too_many = "merge"
-    ) |>
-    dplyr::mutate(
-      UFBoot = suppressWarnings(as.numeric(.data$UFBoot)), # warning not needed, will be NA if missing
-      SHaLRT = suppressWarnings(as.numeric(.data$SHaLRT)),
-      isSupportedUFBoot = .data$UFBoot >= 95 & !is.na(.data$UFBoot),
-      isSupportedSHalRT = .data$SHaLRT >= 80 & !is.na(.data$SHaLRT),
-      colour = dplyr::case_when(.data$isSupportedUFBoot & .data$isSupportedSHalRT ~ "black",
-        .data$isSupportedUFBoot | .data$isSupportedSHalRT ~ "grey",
-        .default = "white"
-      )
-    )
-  ggtree::ggtree(tree) +
+  base.tree <- suppressWarnings(ggtree::ggtree(tree)) +
     ggtree::geom_tree() +
     # Draw tips. Pass through extra aesthetic arguments in ...
     ggtree::geom_tiplab(size = tiplab.font.size, ggplot2::aes_string(...)) +
-    # Draw coloured circles over each node with bootstrap support
-    ggtree::geom_nodepoint(size = 1.25, col = "black") + # big black circle (will make a black outline)
-    ggtree::geom_nodepoint(size = 0.65, col = node.label.values$colour) + # small coloured circle on top
-    # Add scale bar
     ggtree::geom_treescale(fontsize = 1.8, y = -1, width = 0.05) +
-
-    # Optional - we can set the y axis to exactly size needed if space is tight
-    # ggplot2::coord_cartesian(
-    #   clip = "off",
-    #   ylim = c(-2, length(tree.data$tip.label) + 1)
-    # ) +
     ggtree::theme_tree() +
     ggplot2::theme(legend.position = "none")
+
+  # Get the complete node labels
+  node.label.values <- data.frame("label" = tree$node.label)
+  # Bootstraps may be written within the node label before the branch length. There
+  # may be more than one bootstrap value for a node (e.g. SH-aLRT and UFBoot in
+  # IQTREE). Example: "Node9/98.1/99". The root node will be the empty string.
+
+  has.bootstrap <- any(stringr::str_detect(node.label.values$label, "/"))
+  if (!has.bootstrap) {
+    cat("No bootstrap detected across all nodes\n")
+  }
+
+  n.bootstrap.values <- max(stringr::str_count(node.label.values$label, "/"))
+  cat("Detected", n.bootstrap.values, "bootstrap values per node\n")
+
+  if (n.bootstrap.values == 1) {
+    # Single bootstrap node colour
+    bootstrap.colours <- grDevices::grey.colors(n = 101, start = 0, end = 1, rev = TRUE)
+    bootstrap.values <- node.label.values |>
+      tidyr::separate_wider_delim(.data$label,
+        delim = "/", names = c("label", "Bootstrap"),
+        too_few = "align_end", too_many = "merge"
+      ) |>
+      dplyr::mutate(
+        Bootstrap = suppressWarnings(as.numeric(.data$Bootstrap)),
+        Colour = bootstrap.colours[as.integer(Bootstrap) + 1]
+      ) # warning not needed, will be NA if missing
+
+    base.tree <- base.tree +
+      # Draw coloured circles over each node with bootstrap support
+      ggtree::geom_nodepoint(size = 1.25, col = "black") + # big black circle (will make a black outline)
+      ggtree::geom_nodepoint(size = 0.65, col = bootstrap.values$Colour) # small coloured circle on top
+  }
+
+  if (n.bootstrap.values == 2) {
+    # Two bootstrap values; assume SH-aLRT and UFBoot
+    node.label.values <- node.label.values |>
+      tidyr::separate_wider_delim(.data$label,
+        delim = "/", names = c("name", "SHaLRT", "UFBoot"),
+        too_few = "align_end", too_many = "merge"
+      ) |>
+      dplyr::mutate(
+        UFBoot = suppressWarnings(as.numeric(.data$UFBoot)), # warning not needed, will be NA if missing
+        SHaLRT = suppressWarnings(as.numeric(.data$SHaLRT)),
+        isSupportedUFBoot = .data$UFBoot >= 95 & !is.na(.data$UFBoot),
+        isSupportedSHalRT = .data$SHaLRT >= 80 & !is.na(.data$SHaLRT),
+        colour = dplyr::case_when(.data$isSupportedUFBoot & .data$isSupportedSHalRT ~ "black",
+          .data$isSupportedUFBoot | .data$isSupportedSHalRT ~ "grey",
+          .default = "white"
+        )
+      )
+    base.tree <- base.tree +
+      # Draw coloured circles over each node with bootstrap support
+      ggtree::geom_nodepoint(size = 1.25, col = "black") + # big black circle (will make a black outline)
+      ggtree::geom_nodepoint(size = 0.65, col = node.label.values$colour) # small coloured circle on top
+  }
+
+  return(base.tree)
+  # Optional - we can set the y axis to exactly size needed if space is tight
+  # ggplot2::coord_cartesian(
+  #   clip = "off",
+  #   ylim = c(-2, length(tree.data$tip.label) + 1)
+  # ) +
 }
 
 
