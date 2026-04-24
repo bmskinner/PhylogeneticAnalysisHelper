@@ -8,6 +8,7 @@ It also provides functions to invoke external binaries for standard phylogenetic
 
 ```
 # Install devtools from CRAN if needed
+# install.packages("devtools")
 
-devtools::install_githib("bmskinner/PhylogeneticsAnalysisHelper")
+devtools::install_github("bmskinner/PhylogeneticsAnalysisHelper")
 ```
