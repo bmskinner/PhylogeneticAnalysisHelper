@@ -4,12 +4,14 @@
 \alias{run.mafft}
 \title{Run MAFFT on an input FASTA}
 \usage{
-run.mafft(fa.file, out.dir = "aln", ...)
+run.mafft(fa.file, out.dir = "aln", overwrite = FALSE, ...)
 }
 \arguments{
 \item{fa.file}{the file of sequences to align}
 
 \item{out.dir}{the directory to save the alignment file}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 
 \item{...}{other arguments to mafft}
 }

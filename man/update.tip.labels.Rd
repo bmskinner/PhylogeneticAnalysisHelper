@@ -26,7 +26,7 @@ the tree with the tip labels updated to the new values
 \description{
 The metadata data.frame provided should have columns with the current tip
 labels and the new tip labels in the tree. The tip labels will be updated,
-and the original labels added as a tree attribute
+and the original labels added to a new vector in the tree
 }
 \examples{
 tree <- ape::read.tree(text = "(((a:1, b:1):1, (c:1, d:1):2):1, e:3);")

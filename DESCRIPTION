@@ -1,7 +1,7 @@
 Package: PhylogeneticAnalysisHelper
 Type: Package
 Title: Helper functions for running phylogenetics packages through R
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person(
       "Ben", "Skinner",

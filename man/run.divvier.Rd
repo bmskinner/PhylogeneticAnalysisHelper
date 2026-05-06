@@ -4,10 +4,12 @@
 \alias{run.divvier}
 \title{Run divvier from within a conda environment}
 \usage{
-run.divvier(aln.file, ...)
+run.divvier(aln.file, overwrite = FALSE, ...)
 }
 \arguments{
 \item{aln.file}{the alignment to divvy}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 
 \item{...}{other options to divvier}
 }

@@ -4,12 +4,14 @@
 \alias{run.hyphy.meme}
 \title{Run HyPhy MEME in a Unix environment}
 \usage{
-run.hyphy.meme(nex.file, tree.file)
+run.hyphy.meme(nex.file, tree.file, overwrite = FALSE)
 }
 \arguments{
 \item{nex.file}{the nexus file with the alignment}
 
 \item{tree.file}{the tree for the alignment}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 }
 \value{
 the output file path

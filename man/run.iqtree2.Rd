@@ -4,10 +4,12 @@
 \alias{run.iqtree2}
 \title{Run IQTREE2}
 \usage{
-run.iqtree2(aln.file, ...)
+run.iqtree2(aln.file, overwrite = FALSE, ...)
 }
 \arguments{
 \item{aln.file}{the alignment}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 
 \item{...}{other arguments to IQTREE}
 }

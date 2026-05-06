@@ -4,12 +4,14 @@
 \alias{run.muscle}
 \title{Run muscle}
 \usage{
-run.muscle(fa.file, out.dir = "aln", ...)
+run.muscle(fa.file, out.dir = "aln", overwrite = FALSE, ...)
 }
 \arguments{
 \item{fa.file}{the FASTA file to align}
 
 \item{out.dir}{the directory to output the alignment. Defaults to 'aln'}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 
 \item{...}{other arguments to muscle}
 }

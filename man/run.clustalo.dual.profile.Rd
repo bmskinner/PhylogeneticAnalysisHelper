@@ -4,7 +4,13 @@
 \alias{run.clustalo.dual.profile}
 \title{Create a alignment from two existing alignments}
 \usage{
-run.clustalo.dual.profile(aln.file.1, aln.file.2, out.file)
+run.clustalo.dual.profile(
+  aln.file.1,
+  aln.file.2,
+  out.file,
+  overwrite = FALSE,
+  ...
+)
 }
 \arguments{
 \item{aln.file.1}{the first alignment file}
@@ -12,6 +18,10 @@ run.clustalo.dual.profile(aln.file.1, aln.file.2, out.file)
 \item{aln.file.2}{the second alignment file (or single sequence FASTA)}
 
 \item{out.file}{the combined output alignment file}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
+
+\item{...}{other arguments to clustalo}
 }
 \description{
 Create a alignment of two existing alignments (or an alignment and a single

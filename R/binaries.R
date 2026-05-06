@@ -21,9 +21,9 @@ is.on.PATH <- function(binary) {
 #' @returns nothing; halts the script if the binary is not found
 #'
 #' @examples
-#' check.binary.exists("macse")
-#' @export check.binary.exists
-check.binary.exists <- function(binary) {
+#' stop.if.missing("macse")
+#' @export stop.if.missing
+stop.if.missing <- function(binary) {
   if (!is.on.PATH(binary)) stop(paste("Cannot find", binary, "on PATH"))
 }
 
@@ -47,7 +47,7 @@ check.binary.exists <- function(binary) {
 #'
 run.ncbi.datasets <- function(symbol, ortholog = "all", include = "cds", overwrite = FALSE,
                               filename, ...) {
-  check.binary.exists("datasets")
+  stop.if.missing("datasets")
 
   # Define where files will be moved after download
   data.dir <- dirname(filename)
@@ -154,7 +154,7 @@ run.ncbi.datasets <- function(symbol, ortholog = "all", include = "cds", overwri
 #'
 #' @export
 run.macse <- function(...) {
-  check.binary.exists("macse")
+  stop.if.missing("macse")
   system2("macse", paste(
     ...
   ))
@@ -177,7 +177,7 @@ run.macse <- function(...) {
 #' @examples
 #' # trim.files <- run.macse.trim.non.homologous.fragments(cds.file)
 run.macse.trim.non.homologous.fragments <- function(fa.file, out.dir = "aln", ...) {
-  check.binary.exists("macse")
+  stop.if.missing("macse")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
 
@@ -212,7 +212,7 @@ run.macse.trim.non.homologous.fragments <- function(fa.file, out.dir = "aln", ..
 #' @export
 #'
 run.macse.align.sequences <- function(fa.file, out.dir = "aln", ...) {
-  check.binary.exists("macse")
+  stop.if.missing("macse")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
   aa.out <- file.path(out.dir, paste0(out.name, ".aa.aln"))
@@ -245,7 +245,7 @@ run.macse.align.sequences <- function(fa.file, out.dir = "aln", ...) {
 #' @returns a list with the alignment file names for AA, NT and the stats file
 #' @export
 run.macse.export.alignment <- function(nt.aln.file, out.dir = "aln", ...) {
-  check.binary.exists("macse")
+  stop.if.missing("macse")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(nt.aln.file))
   nt.out <- file.path(out.dir, paste0(out.name, ".nt.clean.aln"))
@@ -279,15 +279,22 @@ run.macse.export.alignment <- function(nt.aln.file, out.dir = "aln", ...) {
 #'
 #' @param fa.file the file of sequences to align
 #' @param out.dir   the directory to save the alignment file
+#' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to mafft
 #'
 #' @returns the alignment file name
 #' @export
-run.mafft <- function(fa.file, out.dir = "aln", ...) {
-  check.binary.exists("mafft")
+run.mafft <- function(fa.file, out.dir = "aln", overwrite = FALSE, ...) {
+  stop.if.missing("mafft")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
   aln.file <- file.path(out.dir, paste0(out.name, ".aln"))
+
+  if (file.exists(aln.file) & !overwrite) {
+    warning("Alignment", aln.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(aln.file)
+  }
+
   cat("Executing: mafft", paste(...), fa.file, " > ", aln.file, "\n")
   system2("mafft", paste(
     ...,
@@ -307,16 +314,25 @@ run.mafft <- function(fa.file, out.dir = "aln", ...) {
 #' @param aln.file.1 the first alignment file
 #' @param aln.file.2 the second alignment file (or single sequence FASTA)
 #' @param out.file the combined output alignment file
+#' @param overwrite overwrite existing output files only if TRUE
+#' @param ... other arguments to clustalo
 #'
 #' @export
 #'
-run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file) {
-  check.binary.exists("clustalo")
+run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file, overwrite = FALSE, ...) {
+  stop.if.missing("clustalo")
+
+  if (file.exists(out.file) & !overwrite) {
+    warning("Alignment", out.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(out.file)
+  }
+
   system2("clustalo", paste(
     "--profile1", aln.file.1,
     "--profile2", aln.file.2,
     "-o", out.file,
-    "--force"
+    "--force",
+    ...
   )) # overwrite existing alignments
 }
 
@@ -326,16 +342,23 @@ run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file) {
 #'
 #' @param fa.file the FASTA file to align
 #' @param out.dir the directory to output the alignment. Defaults to 'aln'
+#' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to muscle
 #'
 #' @returns the path to the alignment file
 #' @export
 #'
-run.muscle <- function(fa.file, out.dir = "aln", ...) {
-  check.binary.exists("muscle")
+run.muscle <- function(fa.file, out.dir = "aln", overwrite = FALSE, ...) {
+  stop.if.missing("muscle")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
   aln.file <- file.path(out.dir, paste0(out.name, ".aln"))
+
+  if (file.exists(aln.file) & !overwrite) {
+    warning("Alignment", aln.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(aln.file)
+  }
+
   system2("muscle", paste(
     "-align", fa.file,
     "-output", aln.file
@@ -348,16 +371,23 @@ run.muscle <- function(fa.file, out.dir = "aln", ...) {
 #' Expects 'iqtree2' on the PATH. By default, runs with 6 threads
 #'
 #' @param aln.file the alignment
+#' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to IQTREE
 #'
 #' @returns the path to the treefile
 #' @export
 #'
-run.iqtree2 <- function(aln.file, ...) {
-  check.binary.exists("iqtree2")
+run.iqtree2 <- function(aln.file, overwrite = FALSE, ...) {
+  stop.if.missing("iqtree2")
   out.dir <- dirname(aln.file)
   out.name <- tools::file_path_sans_ext(basename(aln.file))
   log.file <- file.path(out.dir, paste0(out.name, ".iqtree.log"))
+  tree.file <- paste0(aln.file, ".treefile")
+
+  if (file.exists(tree.file) & !overwrite) {
+    warning("Tree", tree.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(tree.file)
+  }
 
   # Note - cluster default versions IQTREE 1.6 and 2.0.6 reliably segfault using -st CODON
   # Manually added 2.4.0 and 3.0.1 to PATH, appears stable
@@ -371,7 +401,7 @@ run.iqtree2 <- function(aln.file, ...) {
   )
 
   # Return file with the tree
-  paste0(aln.file, ".treefile")
+  tree.file
 }
 
 #' Run IQTREE3
@@ -379,16 +409,23 @@ run.iqtree2 <- function(aln.file, ...) {
 #' Expects 'iqtree3' on the PATH. By default, runs with 6 threads
 #'
 #' @param aln.file the alignment
+#' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to IQTREE
 #'
 #' @returns the path to the treefile
 #' @export
 #'
-run.iqtree3 <- function(aln.file, ...) {
-  check.binary.exists("iqtree3")
+run.iqtree3 <- function(aln.file, overwrite = FALSE, ...) {
+  stop.if.missing("iqtree3")
   out.dir <- dirname(aln.file)
   out.name <- tools::file_path_sans_ext(basename(aln.file))
   log.file <- file.path(out.dir, paste0(out.name, ".iqtree.log"))
+  tree.file <- paste0(aln.file, ".treefile")
+
+  if (file.exists(tree.file) & !overwrite) {
+    warning("Tree", tree.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(tree.file)
+  }
 
   # Note - cluster default versions IQTREE 1.6 and 2.0.6 reliably segfault using -st CODON
   # Manually added 2.4.0 and 3.0.1 to PATH, appears stable
@@ -402,7 +439,7 @@ run.iqtree3 <- function(aln.file, ...) {
   )
 
   # Return file with the tree
-  paste0(aln.file, ".treefile")
+  tree.file
 }
 
 #' Run HyPhy MEME in a Unix environment
@@ -412,12 +449,19 @@ run.iqtree3 <- function(aln.file, ...) {
 #'
 #' @param nex.file the nexus file with the alignment
 #' @param tree.file the tree for the alignment
+#' @param overwrite overwrite existing output files only if TRUE
 #'
 #' @returns the output file path
 #' @export
-run.hyphy.meme <- function(nex.file, tree.file) {
+run.hyphy.meme <- function(nex.file, tree.file, overwrite = FALSE) {
   json.file <- paste0(tree.file, ".json")
   bash.file <- paste0(tree.file, ".sh")
+
+  if (file.exists(json.file) & !overwrite) {
+    warning("HyPhy output", json.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(json.file)
+  }
+
   # Create control script for MEME
   brio::write_file(
     paste0(
@@ -437,13 +481,21 @@ run.hyphy.meme <- function(nex.file, tree.file) {
 #' Run divvier from within a conda environment (named divvier).Creates a divvied
 #' alignment.
 #' @param aln.file the alignment to divvy
+#' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other options to divvier
-#'
+
 #' @returns the divvied alignment file path
 #' @export
 #'
-run.divvier <- function(aln.file, ...) {
+run.divvier <- function(aln.file, overwrite = FALSE, ...) {
   bash.file <- paste0(aln.file, ".sh")
+  out.file <- paste0(aln.file, ".divvy.aln")
+
+  if (file.exists(out.file) & !overwrite) {
+    warning("Divvier output", out.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    return(out.file)
+  }
+
   brio::write_file(
     paste0(
       "#!/bin/bash\n",
@@ -451,11 +503,11 @@ run.divvier <- function(aln.file, ...) {
       "# Identify phylogenetically informatve sites with indels\n",
       "divvier -divvygap ", paste(...), " ", aln.file, "\n",
       "# Ensure file extension is aln for use in IQTREE\n",
-      "mv ", paste0(aln.file, ".divvy.fas"), " ", paste0(aln.file, ".divvy.aln"), "\n"
+      "mv ", paste0(aln.file, ".divvy.fas"), " ", out.file, "\n"
     ),
     bash.file
   )
   system2("bash", bash.file)
   # Return the divvied file
-  paste0(aln.file, ".divvy.aln")
+  out.file
 }

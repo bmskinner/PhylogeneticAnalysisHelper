@@ -1,14 +1,5 @@
 #### Other utility functions #####
 
-#' Return a timestamp for logging
-#'
-#' @returns the timestamp
-#' @export
-#'
-timestamp <- function() {
-  format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-}
-
 #' Translate ungapped coordinates back to gapped coordinates
 #'
 #' @param site.no.gap  the integer site in an ungapped sequence to convert
@@ -178,7 +169,7 @@ add.tree.grouping <- function(tree, metadata, tip.label.column = "tip.label", gr
 #'
 #' The metadata data.frame provided should have columns with the current tip
 #' labels and the new tip labels in the tree. The tip labels will be updated,
-#' and the original labels added as a tree attribute
+#' and the original labels added to a new vector in the tree
 #'
 #' @param tree the tree to update
 #' @param metadata a data.frame with columns for current and new tip labels
@@ -207,7 +198,7 @@ add.tree.grouping <- function(tree, metadata, tip.label.column = "tip.label", gr
 update.tip.labels <- function(tree, metadata,
                               current.tip.label.column = "current.tip.label",
                               new.tip.label.column = "new.tip.label") {
-  attr(tree, "old.tip.label") <- tree$tip.label
+  tree$old.tip.label <- tree$tip.label
   new.tip.labels <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, current.tip.label.column] == x, new.tip.label.column]))
   tree$tip.label <- new.tip.labels
   tree
