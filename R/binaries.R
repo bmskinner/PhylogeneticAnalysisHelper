@@ -284,7 +284,7 @@ run.macse.export.alignment <- function(nt.aln.file, out.dir = "aln", ...) {
 #'
 #' @returns the alignment file name
 #' @export
-run.mafft <- function(fa.file, out.dir = "aln", overwrite = FALSE, ...) {
+run.mafft <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
   stop.if.missing("mafft")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
@@ -319,7 +319,7 @@ run.mafft <- function(fa.file, out.dir = "aln", overwrite = FALSE, ...) {
 #'
 #' @export
 #'
-run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file, overwrite = FALSE, ...) {
+run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file, ..., overwrite = FALSE) {
   stop.if.missing("clustalo")
 
   if (file.exists(out.file) & !overwrite) {
@@ -348,7 +348,7 @@ run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file, overwrit
 #' @returns the path to the alignment file
 #' @export
 #'
-run.muscle <- function(fa.file, out.dir = "aln", overwrite = FALSE, ...) {
+run.muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
   stop.if.missing("muscle")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
@@ -377,7 +377,7 @@ run.muscle <- function(fa.file, out.dir = "aln", overwrite = FALSE, ...) {
 #' @returns the path to the treefile
 #' @export
 #'
-run.iqtree2 <- function(aln.file, overwrite = FALSE, ...) {
+run.iqtree2 <- function(aln.file, ..., overwrite = FALSE) {
   stop.if.missing("iqtree2")
   out.dir <- dirname(aln.file)
   out.name <- tools::file_path_sans_ext(basename(aln.file))
@@ -406,16 +406,18 @@ run.iqtree2 <- function(aln.file, overwrite = FALSE, ...) {
 
 #' Run IQTREE3
 #'
-#' Expects 'iqtree3' on the PATH. By default, runs with 6 threads
+#' Run IQTREE on a given sequence alignment. Expects 'iqtree3' on the PATH. By
+#' default, runs with 6 threads. Output files will be created in the same
+#' directory as the input alignment file.
 #'
 #' @param aln.file the alignment
 #' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to IQTREE
 #'
-#' @returns the path to the treefile
+#' @returns the relative path to the treefile e.g. aln/example.treefile
 #' @export
 #'
-run.iqtree3 <- function(aln.file, overwrite = FALSE, ...) {
+run.iqtree3 <- function(aln.file, ..., overwrite = FALSE) {
   stop.if.missing("iqtree3")
   out.dir <- dirname(aln.file)
   out.name <- tools::file_path_sans_ext(basename(aln.file))
@@ -423,19 +425,22 @@ run.iqtree3 <- function(aln.file, overwrite = FALSE, ...) {
   tree.file <- paste0(aln.file, ".treefile")
 
   if (file.exists(tree.file) & !overwrite) {
-    warning("Tree", tree.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    warning("Tree '", tree.file, "' exists, not overwriting. Use overwrite = TRUE to force")
     return(tree.file)
   }
 
-  # Note - cluster default versions IQTREE 1.6 and 2.0.6 reliably segfault using -st CODON
-  # Manually added 2.4.0 and 3.0.1 to PATH, appears stable
-  system2("iqtree3", paste(
+  params <- paste(
     "-s ", aln.file,
+    "-safe", # ignore numerical underflow errors https://github.com/orgs/iqtree/discussions/365
+    "-redo", # always overwrite existing files; we catch existing outputs earlier
     "-nt 6", # number of threads
-    ...
-  ), # any other arguments to iqtree
-  stdout = log.file,
-  stderr = log.file
+    ... # any other arguments to iqtree
+  )
+  cat("Executing: iqtree3", paste(params, collapse = " "), "\n")
+
+  system2("iqtree3", params,
+    stdout = log.file,
+    stderr = log.file
   )
 
   # Return file with the tree
@@ -487,7 +492,7 @@ run.hyphy.meme <- function(nex.file, tree.file, overwrite = FALSE) {
 #' @returns the divvied alignment file path
 #' @export
 #'
-run.divvier <- function(aln.file, overwrite = FALSE, ...) {
+run.divvier <- function(aln.file, ..., overwrite = FALSE) {
   bash.file <- paste0(aln.file, ".sh")
   out.file <- paste0(aln.file, ".divvy.aln")
 
