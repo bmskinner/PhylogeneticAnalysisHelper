@@ -116,7 +116,6 @@ subset.sequence <- function(aln, sequence.name, start, end) {
 #' plot(rerooted)
 #'
 #' @export
-#'
 reroot.tree <- function(tree, tip.labels, position = 0.01) {
   if (!all(tip.labels %in% tree$tip.label)) {
     cat("Not all tip labels (", tip.labels, ") are in the tree, cannot reroot, not changing tree\n")
@@ -160,8 +159,7 @@ reroot.tree <- function(tree, tip.labels, position = 0.01) {
 add.tree.grouping <- function(tree, metadata, tip.label.column = "tip.label", grouping.column) {
   clade.data <- unlist(sapply(tree$tip.label, \(x) metadata[metadata[, tip.label.column] == x, grouping.column]))
   clade.groups <- split(tree$tip.label, clade.data)
-  tree <- tidytree::groupOTU(tree, clade.groups, group_name = grouping.column)
-  tree
+  tidytree::groupOTU(tree, clade.groups, group_name = grouping.column)
 }
 
 

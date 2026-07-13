@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{save.double.width}
 \alias{save.double.width}
-\title{Save a double column plot (170mm) at 600dpi}
+\title{Save a double column plot (170mm) at 300dpi}
 \usage{
 save.double.width(filename, plot = ggplot2::last_plot(), height = 170)
 }
@@ -14,5 +14,5 @@ save.double.width(filename, plot = ggplot2::last_plot(), height = 170)
 \item{height}{the height in mm. Defaults to 170mm (square plot).}
 }
 \description{
-Save a double column plot (170mm) at 600dpi
+Save a double column plot (170mm) at 300dpi
 }

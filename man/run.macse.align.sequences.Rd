@@ -2,7 +2,7 @@
 % Please edit documentation in R/binaries.R
 \name{run.macse.align.sequences}
 \alias{run.macse.align.sequences}
-\title{Run MACSE alingment on an input FASTA file}
+\title{Alias for macse.align. Deprecated.}
 \usage{
 run.macse.align.sequences(fa.file, out.dir = "aln", ...)
 }
@@ -17,5 +17,5 @@ run.macse.align.sequences(fa.file, out.dir = "aln", ...)
 a list with the alignment file names for AA and NT
 }
 \description{
-Outputs NT and AA alignment files. Expects 'macse' on the PATH
+Alias for macse.align. Deprecated.
 }

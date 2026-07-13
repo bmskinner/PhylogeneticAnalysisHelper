@@ -1,3 +1,5 @@
+#### Internal functions for checking PATH ####
+
 # Functions relating to running external binaries
 #' Test if the given binary name is on the PATH
 #'
@@ -7,9 +9,6 @@
 #'
 #' @returns true if the binary is on the PATH, false otherwise
 #'
-#' @examples
-#' is.on.PATH("macse")
-#' @export is.on.PATH
 is.on.PATH <- function(binary) {
   return(Sys.which(binary) != "")
 }
@@ -19,13 +18,11 @@ is.on.PATH <- function(binary) {
 #' @param binary the binary to test
 #'
 #' @returns nothing; halts the script if the binary is not found
-#'
-#' @examples
-#' stop.if.missing("macse")
-#' @export stop.if.missing
 stop.if.missing <- function(binary) {
   if (!is.on.PATH(binary)) stop(paste("Cannot find", binary, "on PATH"))
 }
+
+#### Data fetching tools ####
 
 #' Download ortholgoues for the given gene symbol using NCBI datasets
 #'
@@ -145,19 +142,47 @@ run.ncbi.datasets <- function(symbol, ortholog = "all", include = "cds", overwri
   )
 }
 
-#' Generic wrapper for MACSE
+#### Alignment tools ####
+
+#' Generic wrapper for MACSE.
 #'
 #' Run arbitrary MACSE commands. The subprogram and all options must be
 #' specified.
 #'
-#' @param ... all arguments to macse
+#' @param prog the macse program to run
+#' @param log.file the file to redirect stdout and stderr. If "", output will be
+#'   sent to the R console
+#' @param ... other arguments to macse
+#'
+#' @examples
+#' \dontrun{
+#' macse("alignSequences", "-seq /path/to/file.fa",
+#'                         "-out_NT /path/to/out.aln")
+#' }
 #'
 #' @export
-run.macse <- function(...) {
+macse <- function(prog, log.file="", ...) {
+  # Here, macse is an alias on the PATH to java -jar /path/to/macse/jar
+  # The alias should be created externally.
   stop.if.missing("macse")
   system2("macse", paste(
-    ...
-  ))
+    " -prog", prog,
+    ... # any other options
+  ),
+  stdout = log.file, # logs
+  stderr = log.file
+  )
+}
+
+#' Alias for macse. Deprecated.
+#'
+#' @param prog the macse program to run
+#' @param log.file the file to direct stdout and stderr
+#' @param ... other arguments to macse
+#' @export
+#' @seealso macse()
+run.macse <- function(prog, log.file="", ...) {
+  macse(prog, log.file, ...)
 }
 
 
@@ -183,8 +208,10 @@ run.macse.trim.non.homologous.fragments <- function(fa.file, out.dir = "aln", ..
 
   nt.out <- file.path(out.dir, paste0(out.name, ".trim.fa"))
   stat.out <- file.path(out.dir, paste0(out.name, ".trim.stats.csv"))
-  system2("macse", paste(
-    " -prog trimNonHomologousFragments",
+
+  macse(
+    prog = "trimNonHomologousFragments",
+    log.file = file.path(out.dir, paste0(out.name, ".macse.log")),
     "-seq", fa.file, # input
     "-min_homology_to_keep_seq 0.2", # internal stop codon
     "-min_trim_in 40", # minimum length to internally trim
@@ -192,10 +219,7 @@ run.macse.trim.non.homologous.fragments <- function(fa.file, out.dir = "aln", ..
     "-out_trim_info", stat.out, # generate stat file per site
     "-out_NT", nt.out, # output nt alignment
     ...
-  ), # any other options
-  stdout = file.path(out.dir, paste0(out.name, ".macse.log")), # logs
-  stderr = file.path(out.dir, paste0(out.name, ".macse.log"))
-  ) # error logs
+  )
   # Return output file names
   list("nt" = nt.out, "stat" = stat.out)
 }
@@ -211,65 +235,109 @@ run.macse.trim.non.homologous.fragments <- function(fa.file, out.dir = "aln", ..
 #' @returns a list with the alignment file names for AA and NT
 #' @export
 #'
-run.macse.align.sequences <- function(fa.file, out.dir = "aln", ...) {
+#' @examples
+#' # macse.align(fa.file = "/path/to/data.fa", out.dir = "/path/to/output/dir/")
+#'
+macse.align <- function(fa.file, out.dir = "aln", ...) {
   stop.if.missing("macse")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
   aa.out <- file.path(out.dir, paste0(out.name, ".aa.aln"))
   nt.out <- file.path(out.dir, paste0(out.name, ".nt.aln"))
+
   # Run a codon aware alignment with MACSE
-  # Here, macse is an alias on the PATH to java -jar /path/to/macse/jar
-  system2("macse", paste(
-    " -prog alignSequences",
+  macse(
+    prog = "alignSequences",
+    log.file = file.path(out.dir, paste0(out.name, ".macse.log")),
     "-seq", fa.file, # input
     "-out_NT", nt.out, # output nt alignment
     "-out_AA", aa.out, # output aa alignment
     ...
-  ), # any other options
-  stdout = file.path(out.dir, paste0(out.name, ".macse.log")), # logs
-  stderr = file.path(out.dir, paste0(out.name, ".macse.log"))
-  ) # error logs
+  )
 
   # Return output file names
   list("aa" = aa.out, "nt" = nt.out)
 }
 
-#' Remove stop codons from NT alignment.
+#' Alias for macse.align. Deprecated.
 #'
-#' Using macse exportAlignment. Expects 'macse' on the PATH.
+#' @param fa.file the FASTA file to align
+#' @param out.dir the directory to save the alignment files
+#' @param ... other arguments to macse
+#'
+#' @returns a list with the alignment file names for AA and NT
+#' @export
+run.macse.align.sequences <- function(fa.file, out.dir = "aln", ...) {
+  macse.align(fa.file, out.dir, ...)
+}
+
+#' Clean a nucleotide alignment
+#'
+#' Uses macse exportAlignment. Expects 'macse' on the PATH. camelCase arguments
+#' match those for MACSE exportAlignment.
 #'
 #' @param nt.aln.file aligned FASTA file containing stop codons and or frameshifts.
 #' @param out.dir the directory to save the alignment files
+#' @param codonForFinalStop string to replace final stop codon
+#' @param codonForInternalStop string to replace internal stop codons
+#' @param codonForInternalFS string to replace internal codon-sized frameshifts
+#' @param charForRemainingFS string to replace other frameshifts
 #' @param ... other arguments to macse
 #'
 #' @returns a list with the alignment file names for AA, NT and the stats file
 #' @export
-run.macse.export.alignment <- function(nt.aln.file, out.dir = "aln", ...) {
+macse.export <- function(nt.aln.file, out.dir = "aln",
+                                       codonForFinalStop = "---",
+                                       codonForInternalStop = "NNN",
+                                       codonForInternalFS = "---",
+                                       charForRemainingFS = "-",
+                                       ...) {
   stop.if.missing("macse")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(nt.aln.file))
   nt.out <- file.path(out.dir, paste0(out.name, ".nt.clean.aln"))
   aa.out <- file.path(out.dir, paste0(out.name, ".aa.clean.aln"))
   stat.out <- file.path(out.dir, paste0(out.name, ".clean.stat.csv"))
-  system2("macse", paste(
-    " -prog exportAlignment",
+
+  macse(
+    prog = "exportAlignment",
+    log.file = file.path(out.dir, paste0(out.name, ".macse.log")),
     "-align", nt.aln.file, # input
-    "-codonForFinalStop ---", # remove final stop codon
-    "-codonForInternalStop NNN", # internal stop codon
-    "-codonForInternalFS ---", # internal framshift to gap
-    "-charForRemainingFS -", # other frameshift to gap
+    "-codonForFinalStop", codonForFinalStop, # remove final stop codon
+    "-codonForInternalStop", codonForInternalStop, # internal stop codon
+    "-codonForInternalFS", codonForInternalFS, # internal framshift to gap
+    "-charForRemainingFS", charForRemainingFS, # other frameshift to gap
 
     "-out_stat_per_seq", stat.out, # generate stat file per site
     "-out_NT", nt.out, # output nt alignment
     "-out_AA", aa.out, # output aa alignment
     ...
-  ), # any other options
-  stdout = file.path(out.dir, paste0(out.name, ".macse.log")), # logs
-  stderr = file.path(out.dir, paste0(out.name, ".macse.log"))
-  ) # error logs
+  )
 
   # Return output file names
   list("aa" = aa.out, "nt" = nt.out, "stats" = stat.out)
+}
+
+#' Alias for macse.export. Deprecated.
+#'
+#' @param nt.aln.file aligned FASTA file containing stop codons and or frameshifts.
+#' @param out.dir the directory to save the alignment files
+#' @param codonForFinalStop string to replace final stop codon
+#' @param codonForInternalStop string to replace internal stop codons
+#' @param codonForInternalFS string to replace internal codon-sized frameshifts
+#' @param charForRemainingFS string to replace other frameshifts
+#' @param ... other arguments to macse
+#'
+#' @returns a list with the alignment file names for AA, NT and the stats file
+#' @export
+run.macse.export.alignment <- function(nt.aln.file, out.dir = "aln",
+                                       codonForFinalStop = "---",
+                                       codonForInternalStop = "NNN",
+                                       codonForInternalFS = "---",
+                                       charForRemainingFS = "-",
+                                       ...) {
+  macse.export(nt.aln.file, out.dir, codonForFinalStop, codonForInternalStop,
+               codonForInternalFS, charForRemainingFS, ...)
 }
 
 #' Run MAFFT on an input FASTA
@@ -284,7 +352,7 @@ run.macse.export.alignment <- function(nt.aln.file, out.dir = "aln", ...) {
 #'
 #' @returns the alignment file name
 #' @export
-run.mafft <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
+mafft <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
   stop.if.missing("mafft")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
@@ -303,6 +371,22 @@ run.mafft <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
   ))
 
   aln.file
+}
+
+#' Alias for mafft. Deprecated.
+#'
+#' Outputs data/seq.fa to aln/seq.aln
+# Uses 6 threads by default. Expects 'mafft' on the PATH.
+#'
+#' @param fa.file the file of sequences to align
+#' @param out.dir   the directory to save the alignment file
+#' @param overwrite overwrite existing output files only if TRUE
+#' @param ... other arguments to mafft
+#'
+#' @returns the alignment file name
+#' @export
+run.mafft <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
+  mafft(fa.file, out.dir, ..., overwrite)
 }
 
 #' Create a alignment from two existing alignments
@@ -348,7 +432,7 @@ run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file, ..., ove
 #' @returns the path to the alignment file
 #' @export
 #'
-run.muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
+muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
   stop.if.missing("muscle")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
@@ -366,18 +450,37 @@ run.muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
   aln.file
 }
 
+#' Alias for muscle. Deprecated.
+#'
+#' Expects 'muscle' on the PATH.
+#'
+#' @param fa.file the FASTA file to align
+#' @param out.dir the directory to output the alignment. Defaults to 'aln'
+#' @param overwrite overwrite existing output files only if TRUE
+#' @param ... other arguments to muscle
+#'
+#' @returns the path to the alignment file
+#' @export
+#'
+run.muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
+  muscle(fa.file, out.dir, ..., overwrite)
+}
+
+#### Tree-building tools ####
+
 #' Run IQTREE2
 #'
-#' Expects 'iqtree2' on the PATH. By default, runs with 6 threads
+#' Expects 'iqtree2' on the PATH.
 #'
 #' @param aln.file the alignment
+#' @param threads number of threads for parallel execution
 #' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to IQTREE
 #'
 #' @returns the path to the treefile
 #' @export
 #'
-run.iqtree2 <- function(aln.file, ..., overwrite = FALSE) {
+iqtree2 <- function(aln.file, ..., threads = 6, overwrite = FALSE) {
   stop.if.missing("iqtree2")
   out.dir <- dirname(aln.file)
   out.name <- tools::file_path_sans_ext(basename(aln.file))
@@ -385,15 +488,17 @@ run.iqtree2 <- function(aln.file, ..., overwrite = FALSE) {
   tree.file <- paste0(aln.file, ".treefile")
 
   if (file.exists(tree.file) & !overwrite) {
-    warning("Tree", tree.file, "exists, not overwriting. Use overwrite = TRUE to force\n")
+    warning("Tree '", tree.file, "' exists, not overwriting. Use overwrite = TRUE to force")
     return(tree.file)
   }
 
-  # Note - cluster default versions IQTREE 1.6 and 2.0.6 reliably segfault using -st CODON
-  # Manually added 2.4.0 and 3.0.1 to PATH, appears stable
-  system2("iqtree3", paste(
+  if(file.exists(tree.file) & overwrite){
+    file.remove(tree.file)
+  }
+
+  system2("iqtree2", paste(
     "-s ", aln.file,
-    "-nt 6", # number of threads
+    "-nt", threads, # number of threads
     ...
   ), # any other arguments to iqtree
   stdout = log.file,
@@ -404,6 +509,22 @@ run.iqtree2 <- function(aln.file, ..., overwrite = FALSE) {
   tree.file
 }
 
+#' Alias for iqtree2. Deprecated.
+#'
+#' Expects 'iqtree2' on the PATH.
+#'
+#' @param aln.file the alignment
+#' @param threads number of threads for parallel execution
+#' @param overwrite overwrite existing output files only if TRUE
+#' @param ... other arguments to IQTREE
+#'
+#' @returns the path to the treefile
+#' @export
+#'
+run.iqtree2 <- function(aln.file, ..., threads = 6, overwrite = FALSE) {
+  iqtree2(aln.file, ..., threads, overwrite)
+}
+
 #' Run IQTREE3
 #'
 #' Run IQTREE on a given sequence alignment. Expects 'iqtree3' on the PATH. By
@@ -411,13 +532,17 @@ run.iqtree2 <- function(aln.file, ..., overwrite = FALSE) {
 #' directory as the input alignment file.
 #'
 #' @param aln.file the alignment
+#' @param threads number of threads for parallel execution
 #' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to IQTREE
 #'
 #' @returns the relative path to the treefile e.g. aln/example.treefile
 #' @export
 #'
-run.iqtree3 <- function(aln.file, ..., overwrite = FALSE) {
+#' @examples
+#' # tree.file <- iqtree3(aln.file = "example.aln", "-bb 1000")
+#'
+iqtree3 <- function(aln.file, ..., threads = 6, overwrite = FALSE) {
   stop.if.missing("iqtree3")
   out.dir <- dirname(aln.file)
   out.name <- tools::file_path_sans_ext(basename(aln.file))
@@ -429,11 +554,15 @@ run.iqtree3 <- function(aln.file, ..., overwrite = FALSE) {
     return(tree.file)
   }
 
+  if(file.exists(tree.file) & overwrite){
+    file.remove(tree.file)
+  }
+
   params <- paste(
     "-s ", aln.file,
     "-safe", # ignore numerical underflow errors https://github.com/orgs/iqtree/discussions/365
     "-redo", # always overwrite existing files; we catch existing outputs earlier
-    "-nt 6", # number of threads
+    "-nt", threads, # number of threads
     ... # any other arguments to iqtree
   )
   cat("Executing: iqtree3", paste(params, collapse = " "), "\n")
@@ -447,18 +576,44 @@ run.iqtree3 <- function(aln.file, ..., overwrite = FALSE) {
   tree.file
 }
 
-#' Run HyPhy MEME in a Unix environment
+#' Alias for iqtree3. Deprecated.
 #'
-#' Tests the given test and background branches in the tree file.
-#' Assumes a conda environment named 'hyphy' is available
+#' Run IQTREE on a given sequence alignment. Expects 'iqtree3' on the PATH. By
+#' default, runs with 6 threads. Output files will be created in the same
+#' directory as the input alignment file.
+#'
+#' @param aln.file the alignment
+#' @param threads number of threads for parallel execution
+#' @param overwrite overwrite existing output files only if TRUE
+#' @param ... other arguments to IQTREE
+#'
+#' @returns the relative path to the treefile e.g. aln/example.treefile
+#' @export
+#'
+#' @examples
+#' # tree.file <- run.iqtree3(aln.file = "example.aln", "-bb 1000")
+#'
+run.iqtree3 <- function(aln.file, ..., threads = 6, overwrite = FALSE) {
+  iqtree3(aln.file, ..., threads,overwrite )
+
+}
+
+#### Functions that expect a Unix environment with conda envs for specific tools ####
+
+
+#' Run HyPhy MEME (Unix only)
+#'
+#' Tests the given test and background branches in the tree file. The test
+#' branches should be labelled Test. Assumes a conda environment named 'hyphy' is
+#' available with the hyphy package installed.
 #'
 #' @param nex.file the nexus file with the alignment
-#' @param tree.file the tree for the alignment
+#' @param tree.file the tree for the alignment, with test branches labelled Test
 #' @param overwrite overwrite existing output files only if TRUE
 #'
 #' @returns the output file path
 #' @export
-run.hyphy.meme <- function(nex.file, tree.file, overwrite = FALSE) {
+hyphy.meme <- function(nexus.file, tree.file, overwrite = FALSE) {
   json.file <- paste0(tree.file, ".json")
   bash.file <- paste0(tree.file, ".sh")
 
@@ -467,18 +622,36 @@ run.hyphy.meme <- function(nex.file, tree.file, overwrite = FALSE) {
     return(json.file)
   }
 
-  # Create control script for MEME
+  # Create control script for MEME. Brio used to write exact text, no extra
+  # chars or newlines
   brio::write_file(
     paste0(
       "#!/bin/bash\n",
       "source activate hyphy\n\n",
       "# MEME test for positive selection at individual sites\n",
-      "hyphy meme --alignment  ", nex.file, " --tree ", tree.file, " --branches Test --output ", json.file, "\n"
+      "hyphy meme --alignment  ", nexus.file, " --tree ", tree.file,
+      " --branches Test --output ", json.file, "\n"
     ),
     bash.file
   )
   system2("bash", bash.file)
   json.file
+}
+
+#' Alias for hyphy.meme. Deprecated.
+#'
+#' Tests the given test and background branches in the tree file. The test
+#' branches should be labelled Test. Assumes a conda environment named 'hyphy' is
+#' available with the hyphy package installed.
+#'
+#' @param nex.file the nexus file with the alignment
+#' @param tree.file the tree for the alignment, with test branches labelled Test
+#' @param overwrite overwrite existing output files only if TRUE
+#'
+#' @returns the output file path
+#' @export
+run.hyphy.meme <- function(nexus.file, tree.file, overwrite = FALSE) {
+  hyphy.meme(nexus.file, tree.file, overwrite)
 }
 
 #' Run divvier from within a conda environment
@@ -492,7 +665,7 @@ run.hyphy.meme <- function(nex.file, tree.file, overwrite = FALSE) {
 #' @returns the divvied alignment file path
 #' @export
 #'
-run.divvier <- function(aln.file, ..., overwrite = FALSE) {
+divvier <- function(aln.file, ..., overwrite = FALSE) {
   bash.file <- paste0(aln.file, ".sh")
   out.file <- paste0(aln.file, ".divvy.aln")
 
@@ -516,3 +689,20 @@ run.divvier <- function(aln.file, ..., overwrite = FALSE) {
   # Return the divvied file
   out.file
 }
+
+#' Alias for divvier. Deprecated.
+#'
+#' Run divvier from within a conda environment (named divvier).Creates a divvied
+#' alignment.
+#' @param aln.file the alignment to divvy
+#' @param overwrite overwrite existing output files only if TRUE
+#' @param ... other options to divvier
+
+#' @returns the divvied alignment file path
+#' @export
+#'
+run.divvier <- function(aln.file, ..., overwrite = FALSE) {
+  divvier(aln.file, ..., overwrite)
+}
+
+

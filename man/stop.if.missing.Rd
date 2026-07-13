@@ -15,6 +15,3 @@ nothing; halts the script if the binary is not found
 \description{
 If the given binary is not on the PATH, stop the script
 }
-\examples{
-stop.if.missing("macse")
-}

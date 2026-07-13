@@ -2,18 +2,18 @@
 % Please edit documentation in R/binaries.R
 \name{run.muscle}
 \alias{run.muscle}
-\title{Run muscle}
+\title{Alias for muscle. Deprecated.}
 \usage{
-run.muscle(fa.file, out.dir = "aln", overwrite = FALSE, ...)
+run.muscle(fa.file, out.dir = "aln", ..., overwrite = FALSE)
 }
 \arguments{
 \item{fa.file}{the FASTA file to align}
 
 \item{out.dir}{the directory to output the alignment. Defaults to 'aln'}
 
-\item{overwrite}{overwrite existing output files only if TRUE}
-
 \item{...}{other arguments to muscle}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 }
 \value{
 the path to the alignment file

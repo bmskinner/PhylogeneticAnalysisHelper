@@ -2,20 +2,22 @@
 % Please edit documentation in R/binaries.R
 \name{run.iqtree2}
 \alias{run.iqtree2}
-\title{Run IQTREE2}
+\title{Alias for iqtree2. Deprecated.}
 \usage{
-run.iqtree2(aln.file, overwrite = FALSE, ...)
+run.iqtree2(aln.file, ..., threads = 6, overwrite = FALSE)
 }
 \arguments{
 \item{aln.file}{the alignment}
 
-\item{overwrite}{overwrite existing output files only if TRUE}
-
 \item{...}{other arguments to IQTREE}
+
+\item{threads}{number of threads for parallel execution}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 }
 \value{
 the path to the treefile
 }
 \description{
-Expects 'iqtree2' on the PATH. By default, runs with 6 threads
+Expects 'iqtree2' on the PATH.
 }

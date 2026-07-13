@@ -8,8 +8,8 @@ run.clustalo.dual.profile(
   aln.file.1,
   aln.file.2,
   out.file,
-  overwrite = FALSE,
-  ...
+  ...,
+  overwrite = FALSE
 )
 }
 \arguments{
@@ -19,9 +19,9 @@ run.clustalo.dual.profile(
 
 \item{out.file}{the combined output alignment file}
 
-\item{overwrite}{overwrite existing output files only if TRUE}
-
 \item{...}{other arguments to clustalo}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 }
 \description{
 Create a alignment of two existing alignments (or an alignment and a single

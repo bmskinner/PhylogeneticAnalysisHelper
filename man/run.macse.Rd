@@ -2,14 +2,20 @@
 % Please edit documentation in R/binaries.R
 \name{run.macse}
 \alias{run.macse}
-\title{Generic wrapper for MACSE}
+\title{Alias for macse. Deprecated.}
 \usage{
-run.macse(...)
+run.macse(prog, log.file = "", ...)
 }
 \arguments{
-\item{...}{all arguments to macse}
+\item{prog}{the macse program to run}
+
+\item{log.file}{the file to direct stdout and stderr}
+
+\item{...}{other arguments to macse}
 }
 \description{
-Run arbitrary MACSE commands. The subprogram and all options must be
-specified.
+Alias for macse. Deprecated.
+}
+\seealso{
+macse()
 }

@@ -2,16 +2,18 @@
 % Please edit documentation in R/plotting.R
 \name{calc.kaks}
 \alias{calc.kaks}
-\title{Given a nucleitide alignment file, calculate the KaKs and return in tidy format}
+\title{Given a nucleitide alignment file, calculate the KaKs and return in tidy format.
+The sequence alignment is expected to contain coding sequences only.}
 \usage{
 calc.kaks(nt.aln.file)
 }
 \arguments{
-\item{nt.aln.file}{the alignment file}
+\item{nt.aln.file}{the alignment file in FASTA format.}
 }
 \value{
 the KaKs ratio in long format
 }
 \description{
-Given a nucleitide alignment file, calculate the KaKs and return in tidy format
+Given a nucleitide alignment file, calculate the KaKs and return in tidy format.
+The sequence alignment is expected to contain coding sequences only.
 }

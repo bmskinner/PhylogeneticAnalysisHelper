@@ -2,10 +2,9 @@
 % Please edit documentation in R/plotting.R
 \name{plot.tree}
 \alias{plot.tree}
-\title{Plot a tree as read by ggtree or ape. The tree may have bootstrap values in
-the node labels}
+\title{Plot a tree as read by ggtree or ape.}
 \usage{
-plot.tree(tree, tiplab.font.size = 2, ...)
+\method{plot}{tree}(tree, tiplab.font.size = 2, ...)
 }
 \arguments{
 \item{tree}{the tree}
@@ -15,6 +14,7 @@ plot.tree(tree, tiplab.font.size = 2, ...)
 \item{...}{other parameters to geom_tiplab}
 }
 \description{
-Plot a tree as read by ggtree or ape. The tree may have bootstrap values in
-the node labels
+The tree may or may not have bootstrap
+values in the node labels. Either zero, one or two bootstrap values per node
+are parsed, assuming bootstrap values are delimited by `/`.
 }

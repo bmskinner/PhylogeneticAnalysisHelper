@@ -2,14 +2,30 @@
 % Please edit documentation in R/binaries.R
 \name{run.macse.export.alignment}
 \alias{run.macse.export.alignment}
-\title{Remove stop codons from NT alignment.}
+\title{Alias for macse.export. Deprecated.}
 \usage{
-run.macse.export.alignment(nt.aln.file, out.dir = "aln", ...)
+run.macse.export.alignment(
+  nt.aln.file,
+  out.dir = "aln",
+  codonForFinalStop = "---",
+  codonForInternalStop = "NNN",
+  codonForInternalFS = "---",
+  charForRemainingFS = "-",
+  ...
+)
 }
 \arguments{
 \item{nt.aln.file}{aligned FASTA file containing stop codons and or frameshifts.}
 
 \item{out.dir}{the directory to save the alignment files}
+
+\item{codonForFinalStop}{string to replace final stop codon}
+
+\item{codonForInternalStop}{string to replace internal stop codons}
+
+\item{codonForInternalFS}{string to replace internal codon-sized frameshifts}
+
+\item{charForRemainingFS}{string to replace other frameshifts}
 
 \item{...}{other arguments to macse}
 }
@@ -17,5 +33,5 @@ run.macse.export.alignment(nt.aln.file, out.dir = "aln", ...)
 a list with the alignment file names for AA, NT and the stats file
 }
 \description{
-Using macse exportAlignment. Expects 'macse' on the PATH.
+Alias for macse.export. Deprecated.
 }

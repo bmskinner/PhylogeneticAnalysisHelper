@@ -2,21 +2,22 @@
 % Please edit documentation in R/binaries.R
 \name{run.hyphy.meme}
 \alias{run.hyphy.meme}
-\title{Run HyPhy MEME in a Unix environment}
+\title{Alias for hyphy.meme. Deprecated.}
 \usage{
-run.hyphy.meme(nex.file, tree.file, overwrite = FALSE)
+run.hyphy.meme(nexus.file, tree.file, overwrite = FALSE)
 }
 \arguments{
-\item{nex.file}{the nexus file with the alignment}
-
-\item{tree.file}{the tree for the alignment}
+\item{tree.file}{the tree for the alignment, with test branches labelled Test}
 
 \item{overwrite}{overwrite existing output files only if TRUE}
+
+\item{nex.file}{the nexus file with the alignment}
 }
 \value{
 the output file path
 }
 \description{
-Tests the given test and background branches in the tree file.
-Assumes a conda environment named 'hyphy' is available
+Tests the given test and background branches in the tree file. The test
+branches should be labelled Test. Assumes a conda environment named 'hyphy' is
+available with the hyphy package installed.
 }

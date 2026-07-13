@@ -4,14 +4,12 @@
 \alias{create.xlsx}
 \title{Create an Excel file containing a data frame}
 \usage{
-create.xlsx(data, file.name, cols.to.fixed.size.font = NULL)
+create.xlsx(data, file.name)
 }
 \arguments{
 \item{data}{the data to export}
 
 \item{file.name}{the name of the file}
-
-\item{cols.to.fixed.size.font}{integer vector of column indexes to set in monospace font}
 }
 \description{
 Create an Excel file containing a data frame

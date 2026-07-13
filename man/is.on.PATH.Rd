@@ -15,6 +15,3 @@ true if the binary is on the PATH, false otherwise
 \description{
 Returns true if the binary is on the PATH, false otherwise
 }
-\examples{
-is.on.PATH("macse")
-}

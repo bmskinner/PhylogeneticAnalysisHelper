@@ -2,16 +2,16 @@
 % Please edit documentation in R/binaries.R
 \name{run.divvier}
 \alias{run.divvier}
-\title{Run divvier from within a conda environment}
+\title{Alias for divvier. Deprecated.}
 \usage{
-run.divvier(aln.file, overwrite = FALSE, ...)
+run.divvier(aln.file, ..., overwrite = FALSE)
 }
 \arguments{
 \item{aln.file}{the alignment to divvy}
 
-\item{overwrite}{overwrite existing output files only if TRUE}
-
 \item{...}{other options to divvier}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 }
 \value{
 the divvied alignment file path

@@ -4,26 +4,24 @@
 #'
 #' @param data the data to export
 #' @param file.name the name of the file
-#' @param cols.to.fixed.size.font integer vector of column indexes to set in monospace font
 #'
 #' @export
-create.xlsx <- function(data, file.name, cols.to.fixed.size.font = NULL) {
-  oldOpt <- options()
-  options(xlsx.date.format = "yyyy-mm-dd") # change date format
-  wb <- xlsx::createWorkbook(type = "xlsx")
-  sh <- xlsx::createSheet(wb)
-  xlsx::addDataFrame(data, sh, row.names = F)
-  xlsx::createFreezePane(sh, 2, 2, 2, 2) # freeze top row and first column
-  cs <- xlsx::CellStyle(wb) +
-    xlsx::Font(wb, heightInPoints = 10, isBold = FALSE, name = "Courier New")
-  if (!is.null(cols.to.fixed.size.font)) {
-    for (i in xlsx::getCells(xlsx::getRows(sh), colIndex = cols.to.fixed.size.font)) {
-      xlsx::setCellStyle(i, cs)
-    }
-  }
+create.xlsx <- function(data, file.name) {
+  data <- as.data.frame(data) # ensure not a tibble
 
-  xlsx::autoSizeColumn(sh, 1:ncol(data))
-  xlsx::saveWorkbook(wb, file = file.name)
+  oldOpt <- options()
+  options("openxlsx2.dateFormat" = "yyyy-mm-dd")
+  options("openxlsx2.datetimeFormat" = "yyyy-mm-dd hh:mm:ss")
+  options("openxlsx2.na" = "_openxlsx_NULL")
+  options("openxlsx2.maxWidth" = 50)
+
+  openxlsx2::wb_workbook() |>
+    openxlsx2::wb_add_worksheet("Sheet 1") |>
+    openxlsx2::wb_add_data("Sheet 1", data, row_names = FALSE) |>
+    openxlsx2::wb_freeze_pane(sheet = "Sheet 1", first_row = TRUE, first_col = TRUE) |>
+    openxlsx2::wb_add_filter(sheet = "Sheet 1", rows = 1, cols = 1:ncol(data)) |>
+    openxlsx2::wb_set_col_widths(sheet = "Sheet 1", cols = 1:ncol(data), widths = "auto") |>
+    openxlsx2::wb_save(file = file.name)
   options(oldOpt)
 }
 
@@ -35,18 +33,21 @@ create.xlsx <- function(data, file.name, cols.to.fixed.size.font = NULL) {
 #' @param plot the plot to save. Defaults to the last generated plot.
 #' @param width the width in mm
 #' @param height the height in mm
+#' @param with.svg also save the plot in SVG format if TRUE
 #'
 #' @export
 #'
-save.plot <- function(filename, plot = ggplot2::last_plot(), width, height) {
-  ggplot2::ggsave(filename, plot, dpi = 600, units = "mm", width = width, height = height)
-  ggplot2::ggsave(stringr::str_replace(filename, ".png$", ".svg"), plot,
-    dpi = 300,
-    units = "mm", width = width, height = height
-  )
+save.plot <- function(filename, plot = ggplot2::last_plot(), width, height, with.svg=TRUE) {
+  ggplot2::ggsave(filename, plot, dpi = 300, units = "mm", width = width, height = height)
+  if(with.svg){
+    ggplot2::ggsave(stringr::str_replace(filename, ".png$", ".svg"), plot,
+                    dpi = 300,
+                    units = "mm", width = width, height = height
+    )
+  }
 }
 
-#' Save a double column plot (170mm) at 600dpi
+#' Save a double column plot (170mm) at 300dpi
 #'
 #' @param filename the file to save to
 #' @param plot the plot to save. Defaults to the last generated plot.
@@ -58,24 +59,22 @@ save.double.width <- function(filename, plot = ggplot2::last_plot(), height = 17
   save.plot(filename, plot, width = 170, height)
 }
 
-#' Plot a tree as read by ggtree or ape. The tree may have bootstrap values in
-#' the node labels
+#' Plot a tree as read by ggtree or ape.
+#'
+#' The tree may or may not have bootstrap
+#' values in the node labels. Either zero, one or two bootstrap values per node
+#' are parsed, assuming bootstrap values are delimited by `/`.
 #'
 #' @param tree the tree
 #' @param tiplab.font.size the size of tip text in ggtree
 #' @param ... other parameters to geom_tiplab
 #'
-#' @export plot.tree
-#' @usage plot.tree(tree, tiplab.font.size = 2, ...)
 #' @importFrom rlang .data
 #'
+#' @export plot.tree
 plot.tree <- function(tree, tiplab.font.size = 2, ...) {
   # Remove underscores for pretty printing
   tree$tip.label <- stringr::str_replace_all(tree$tip.label, "_", " ")
-
-  if (is.null(tree$node.label)) {
-    stop("Cannot display bootstrap values, no node labels in tree")
-  }
 
   base.tree <- suppressWarnings(ggtree::ggtree(tree)) +
     ggtree::geom_tree() +
@@ -85,6 +84,12 @@ plot.tree <- function(tree, tiplab.font.size = 2, ...) {
     ggtree::theme_tree() +
     ggplot2::theme(legend.position = "none")
 
+  # No node labels means no bootstrap values. Return the tree as-is.
+  if (is.null(tree$node.label)) {
+    message("Cannot display bootstrap values, no node labels in tree")
+    return(base.tree)
+  }
+
   # Get the complete node labels
   node.label.values <- data.frame("label" = tree$node.label)
   # Bootstraps may be written within the node label before the branch length. There
@@ -93,11 +98,12 @@ plot.tree <- function(tree, tiplab.font.size = 2, ...) {
 
   has.bootstrap <- any(stringr::str_detect(node.label.values$label, "/"))
   if (!has.bootstrap) {
-    cat("No bootstrap detected across all nodes\n")
+    message("No bootstrap separator string detected\n")
+    return(base.tree)
   }
 
-  n.bootstrap.values <- max(stringr::str_count(node.label.values$label, "/"))
-  cat("Detected", n.bootstrap.values, "bootstrap values per node\n")
+  n.bootstrap.values <- max(stringr::str_count(node.label.values$label, "/"))+1
+  message("Detected ", n.bootstrap.values, " bootstrap values per node\n")
 
   if (n.bootstrap.values == 1) {
     # Single bootstrap node colour
@@ -150,9 +156,10 @@ plot.tree <- function(tree, tiplab.font.size = 2, ...) {
 }
 
 
-#' Given a nucleitide alignment file, calculate the KaKs and return in tidy format
+#' Given a nucleitide alignment file, calculate the KaKs and return in tidy format.
+#' The sequence alignment is expected to contain coding sequences only.
 #'
-#' @param nt.aln.file the alignment file
+#' @param nt.aln.file the alignment file in FASTA format.
 #'
 #' @returns the KaKs ratio in long format
 #' @usage calc.kaks(nt.aln.file)

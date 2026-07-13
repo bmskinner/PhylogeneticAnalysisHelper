@@ -4,7 +4,13 @@
 \alias{save.plot}
 \title{Save a plot to file}
 \usage{
-save.plot(filename, plot = ggplot2::last_plot(), width, height)
+save.plot(
+  filename,
+  plot = ggplot2::last_plot(),
+  width,
+  height,
+  with.svg = TRUE
+)
 }
 \arguments{
 \item{filename}{the file to save to}
@@ -14,6 +20,8 @@ save.plot(filename, plot = ggplot2::last_plot(), width, height)
 \item{width}{the width in mm}
 
 \item{height}{the height in mm}
+
+\item{with.svg}{also save the plot in SVG format if TRUE}
 }
 \description{
 Saves png and svg versions of the plot

@@ -2,18 +2,18 @@
 % Please edit documentation in R/binaries.R
 \name{run.mafft}
 \alias{run.mafft}
-\title{Run MAFFT on an input FASTA}
+\title{Alias for mafft. Deprecated.}
 \usage{
-run.mafft(fa.file, out.dir = "aln", overwrite = FALSE, ...)
+run.mafft(fa.file, out.dir = "aln", ..., overwrite = FALSE)
 }
 \arguments{
 \item{fa.file}{the file of sequences to align}
 
 \item{out.dir}{the directory to save the alignment file}
 
-\item{overwrite}{overwrite existing output files only if TRUE}
-
 \item{...}{other arguments to mafft}
+
+\item{overwrite}{overwrite existing output files only if TRUE}
 }
 \value{
 the alignment file name
