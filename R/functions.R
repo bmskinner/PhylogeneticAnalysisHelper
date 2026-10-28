@@ -1,5 +1,27 @@
 #### Other utility functions #####
 
+#' Read a FASTA file of sequences, filter to those of a given length and save
+#'
+#' @param fa.file the sequences to read
+#' @param out.file optional output file for the filtered sequences. If left empty, no file is written.
+#' @param type the type of sequence (dna or aa)
+#' @param min.length the minimum sequence length
+#' @param max.length the maximum sequence length
+#'
+#' @returns the filtered sequences
+#' @export
+#'
+#' @examples
+filter.by.length <- function(fa.file, out.file=NULL, type = "dna", min.length = 1, max.length=Inf){
+  sequence.data <- ape::read.FASTA(fa.file, type = type)
+  lengths <- sapply(sequence.data, length)
+  sequence.data <- sequence.data[lengths>min.length & lengths<max.length]
+  if(!is.null(out.file)) {
+    ape::write.FASTA(sequence.data, out.file)
+  }
+  sequence.data
+}
+
 #' Translate ungapped coordinates back to gapped coordinates
 #'
 #' @param site.no.gap  the integer site in an ungapped sequence to convert
