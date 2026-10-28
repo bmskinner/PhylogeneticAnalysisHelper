@@ -10,8 +10,6 @@
 #'
 #' @returns the filtered sequences
 #' @export
-#'
-#' @examples
 filter.by.length <- function(fa.file, out.file=NULL, type = "dna", min.length = 1, max.length=Inf){
   sequence.data <- ape::read.FASTA(fa.file, type = type)
   lengths <- sapply(sequence.data, length)

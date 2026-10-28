@@ -155,9 +155,13 @@ run.ncbi.datasets <- function(symbol, ortholog = "all", include = "cds", overwri
 #' @param outfmt the output format for the BLAST results
 #'
 #' @returns the blast hits in tabular format
-#' @export
 #'
 #' @examples
+#' \dontrun{
+#' blastn("path/to/seqs.fa")
+#' blastn("path/to/seqs.fa", db="nr", outfmt=7)
+#' }
+#' @export
 blastn <- function(fa.file, db="nt", out.dir = "aln", ..., remote = TRUE, outfmt = 6){
   stop.if.missing("blastn")
 

@@ -4,7 +4,7 @@
 \alias{muscle}
 \title{Run muscle}
 \usage{
-muscle(fa.file, out.dir = "aln", ..., overwrite = FALSE)
+muscle(fa.file, out.dir = "aln", ..., super5 = FALSE, overwrite = FALSE)
 }
 \arguments{
 \item{fa.file}{the FASTA file to align}
@@ -12,6 +12,8 @@ muscle(fa.file, out.dir = "aln", ..., overwrite = FALSE)
 \item{out.dir}{the directory to output the alignment. Defaults to 'aln'}
 
 \item{...}{other arguments to muscle}
+
+\item{super5}{if TRUE, use super5 fast alignment for >1000 sequences. Otherwise, use default alignment method}
 
 \item{overwrite}{overwrite existing output files only if TRUE}
 }

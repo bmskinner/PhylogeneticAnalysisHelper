@@ -2,10 +2,12 @@
 
 export(add.tree.grouping)
 export(biostrings.aln.to.list)
+export(blastn)
 export(calc.kaks)
 export(convert.to.gapped.coordinate)
 export(create.xlsx)
 export(divvier)
+export(filter.by.length)
 export(hyphy.meme)
 export(iqtree2)
 export(iqtree3)
