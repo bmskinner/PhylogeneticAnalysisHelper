@@ -426,13 +426,14 @@ run.clustalo.dual.profile <- function(aln.file.1, aln.file.2, out.file, ..., ove
 #'
 #' @param fa.file the FASTA file to align
 #' @param out.dir the directory to output the alignment. Defaults to 'aln'
+#' @param super5 if TRUE, use super5 fast alignment for >1000 sequences. Otherwise, use default alignment method
 #' @param overwrite overwrite existing output files only if TRUE
 #' @param ... other arguments to muscle
 #'
 #' @returns the path to the alignment file
 #' @export
 #'
-muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
+muscle <- function(fa.file, out.dir = "aln", ..., super5 = FALSE, overwrite = FALSE) {
   stop.if.missing("muscle")
   filesstrings::create_dir(out.dir)
   out.name <- tools::file_path_sans_ext(basename(fa.file))
@@ -443,10 +444,20 @@ muscle <- function(fa.file, out.dir = "aln", ..., overwrite = FALSE) {
     return(aln.file)
   }
 
-  system2("muscle", paste(
-    "-align", fa.file,
-    "-output", aln.file
-  ))
+  if(super5){
+    system2("muscle", paste(
+      "-super5", fa.file,
+      "-output", aln.file,
+      ...
+    ))
+  } else {
+    system2("muscle", paste(
+      "-align", fa.file,
+      "-output", aln.file,
+      ...
+    ))
+  }
+
   aln.file
 }
 
