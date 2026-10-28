@@ -144,6 +144,39 @@ run.ncbi.datasets <- function(symbol, ortholog = "all", include = "cds", overwri
 
 #### Alignment tools ####
 
+#' Run blastn. Requires blastn on your PATH. Run against a local database
+#' or NCBI remote server.
+#'
+#' @param fa.file the sequence(s) to blast
+#' @param db the database to blast against
+#' @param out.dir the directory to save output files
+#' @param ... any other parameters
+#' @param remote if TRUE, use NCBI remote server
+#' @param outfmt the output format for the BLAST results
+#'
+#' @returns the blast hits in tabular format
+#' @export
+#'
+#' @examples
+blastn <- function(fa.file, db="nt", out.dir = "aln", ..., remote = TRUE, outfmt = 6){
+  stop.if.missing("blastn")
+
+  out.name <- tools::file_path_sans_ext(basename(fa.file))
+  out.file <- file.path(out.dir, paste0(out.name, ".out"))
+  system2("blastn", paste(
+    " -db", db,
+    " -query", fa.file,
+    " -out", out.file,
+    " -outfmt", outfmt,
+    ifelse(remote, "-remote", ""),
+    ... # any other options
+  )
+  )
+
+  read.csv(out.file)
+
+}
+
 #' Generic wrapper for MACSE.
 #'
 #' Run arbitrary MACSE commands. The subprogram and all options must be
